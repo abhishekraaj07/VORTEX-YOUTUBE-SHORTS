@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+
+# YouTube Credentials & Tokens (Strict Security)
+client_secrets.json
+yt_token.json
+
+# Build & Temporary Video Renders
+output/temp_scenes/
+*.tmp
+*.log
