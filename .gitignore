@@ -11,6 +11,17 @@ client_secrets.json
 yt_token.json
 
 # Build & Temporary Video Renders
-output/temp_scenes/
+output/*
+!output/.gitkeep
 *.tmp
 *.log
+*.db
+*.db-wal
+*.db-shm
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example

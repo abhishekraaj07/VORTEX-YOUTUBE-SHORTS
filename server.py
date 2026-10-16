@@ -18,6 +18,7 @@ from typing import Dict, Any
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from run_pipeline import run_pipeline
 from core.uploader import YouTubePublisher
+from core.database import Database
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(BASE_DIR, "web")
@@ -27,41 +28,47 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("VortexServer")
 
+# Initialize SQLite Database Engine
+db = Database()
+
 # Input Allowlisting
 ALLOWED_TOPICS = {"y2k38_bug", "undersea_cables", "stuxnet_virus", "custom"}
 ALLOWED_VOICES = {"hi_male", "hi_female", "en_male", "en_female", "en_us_male"}
 ALLOWED_PRIVACY = {"private", "unlisted", "public"}
 
-# Job State Store
-JOBS: Dict[str, Dict[str, Any]] = {}
-JOBS_LOCK = threading.Lock()
+# In-memory fast cache for live threads
+ACTIVE_THREADS: Dict[str, threading.Thread] = {}
 
 def async_render_worker(job_id: str, topic: str, voice: str):
-    """Executes video generation in a background thread without blocking the HTTP server."""
-    with JOBS_LOCK:
-        JOBS[job_id]["status"] = "rendering"
-
+    """Executes video generation in a background thread, persisting state in SQLite."""
+    db.update_job_status(job_id, "rendering", 10)
     output_filename = f"{topic}_{job_id[:8]}.mp4"
     try:
         logger.info(f"Starting background render for job {job_id} (topic: {topic}, voice: {voice})")
+        db.update_job_status(job_id, "rendering", 40)
         result = run_pipeline(
             topic_id=topic,
             voice_key=voice,
             output_filename=output_filename,
             auto_upload=False
         )
-        with JOBS_LOCK:
-            JOBS[job_id]["status"] = "completed"
-            JOBS[job_id]["video_path"] = result["video_path"]
-            JOBS[job_id]["video_url"] = f"/video?file={output_filename}"
-            JOBS[job_id]["duration"] = result["duration"]
-            JOBS[job_id]["size_mb"] = result["size_mb"]
-        logger.info(f"Job {job_id} successfully completed.")
+        
+        # Save completed video to catalog
+        db.save_video(
+            video_id=job_id,
+            job_id=job_id,
+            topic=topic,
+            title=result.get("upload_status", {}).get("metadata", {}).get("title", f"{topic} Short"),
+            duration=result["duration"],
+            size_mb=result["size_mb"],
+            video_path=result["video_path"],
+            metadata=result
+        )
+        db.update_job_status(job_id, "completed", 100)
+        logger.info(f"Job {job_id} successfully persisted in database.")
     except Exception as e:
         logger.error(f"Render failed for job {job_id}: {str(e)}", exc_info=True)
-        with JOBS_LOCK:
-            JOBS[job_id]["status"] = "failed"
-            JOBS[job_id]["error"] = "Video generation encountered an error during processing. Check server logs."
+        db.update_job_status(job_id, "failed", 0, error_message=str(e)[:200])
 
 class StudioHandler(BaseHTTPRequestHandler):
 
@@ -110,14 +117,31 @@ class StudioHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"status": "ERROR", "message": "Missing 'job_id' parameter."})
                 return
 
-            with JOBS_LOCK:
-                job_data = JOBS.get(job_id)
-
+            job_data = db.get_job(job_id)
             if not job_data:
-                self._send_json(404, {"status": "ERROR", "message": "Job ID not found."})
+                self._send_json(404, {"status": "ERROR", "message": "Job ID not found in database."})
                 return
 
+            # Attach video URL if completed
+            if job_data.get("status") == "completed":
+                video = db.get_video(job_id)
+                if video:
+                    job_data["video_url"] = f"/video?file={os.path.basename(video['video_path'])}"
+                    job_data["duration"] = video.get("duration")
+                    job_data["size_mb"] = video.get("size_mb")
+
             self._send_json(200, job_data)
+            return
+
+        elif path == "/api/history":
+            videos = db.list_videos(limit=25)
+            jobs = db.list_jobs(limit=25)
+            self._send_json(200, {
+                "status": "SUCCESS",
+                "total_videos": len(videos),
+                "videos": videos,
+                "recent_jobs": jobs
+            })
             return
 
         elif path == "/video":
@@ -243,18 +267,12 @@ class StudioHandler(BaseHTTPRequestHandler):
                 })
                 return
 
-            # Enqueue asynchronous job
+            # Enqueue asynchronous job in SQLite database
             job_id = uuid.uuid4().hex
-            with JOBS_LOCK:
-                JOBS[job_id] = {
-                    "job_id": job_id,
-                    "topic": topic,
-                    "voice": voice,
-                    "status": "queued",
-                    "created_at": os.path.getmtime(OUTPUT_DIR) if os.path.exists(OUTPUT_DIR) else 0
-                }
+            db.create_job(job_id, topic, voice)
 
             thread = threading.Thread(target=async_render_worker, args=(job_id, topic, voice), daemon=True)
+            ACTIVE_THREADS[job_id] = thread
             thread.start()
 
             self._send_json(202, {
