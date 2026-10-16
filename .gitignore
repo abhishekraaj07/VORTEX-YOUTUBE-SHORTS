@@ -18,6 +18,8 @@ output/*
 *.db
 *.db-wal
 *.db-shm
+.pytest_tmp/
+.pytest_cache/
 
 # wrangler files
 .wrangler

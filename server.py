@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from run_pipeline import run_pipeline
 from core.uploader import YouTubePublisher
 from core.database import Database
+from core.script_generator import VIRAL_TEMPLATES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(BASE_DIR, "web")
@@ -141,6 +142,28 @@ class StudioHandler(BaseHTTPRequestHandler):
                 "total_videos": len(videos),
                 "videos": videos,
                 "recent_jobs": jobs
+            })
+            return
+
+        elif path == "/api/templates":
+            self._send_json(200, {
+                "status": "SUCCESS",
+                "templates": VIRAL_TEMPLATES
+            })
+            return
+
+        elif path == "/api/system-stats":
+            stats = db.get_stats()
+            stats.update({
+                "active_threads": len([t for t in ACTIVE_THREADS.values() if t.is_alive()]),
+                "output_dir": OUTPUT_DIR,
+                "ffmpeg_available": True,
+                "platform": sys.platform,
+                "python_version": sys.version.split()[0]
+            })
+            self._send_json(200, {
+                "status": "SUCCESS",
+                "stats": stats
             })
             return
 

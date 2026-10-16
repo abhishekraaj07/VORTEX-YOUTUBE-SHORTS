@@ -199,3 +199,34 @@ class Database:
             )
             conn.commit()
         return {"upload_id": upload_id, "video_id": video_id, "yt_url": yt_url, "status": privacy_status}
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Returns aggregated telemetry and catalog statistics."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            total_jobs = cursor.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+            completed_jobs = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status = 'completed'").fetchone()[0]
+            failed_jobs = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status = 'failed'").fetchone()[0]
+            rendering_jobs = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status = 'rendering'").fetchone()[0]
+
+            vid_stats = cursor.execute("SELECT COUNT(*), COALESCE(SUM(duration), 0), COALESCE(SUM(size_mb), 0) FROM videos").fetchone()
+            total_videos = vid_stats[0]
+            total_duration = round(vid_stats[1], 1)
+            total_size_mb = round(vid_stats[2], 2)
+
+            total_uploads = cursor.execute("SELECT COUNT(*) FROM uploads").fetchone()[0]
+
+            db_size_kb = round(os.path.getsize(self.db_path) / 1024, 1) if os.path.exists(self.db_path) else 0
+
+            return {
+                "total_jobs": total_jobs,
+                "completed_jobs": completed_jobs,
+                "failed_jobs": failed_jobs,
+                "rendering_jobs": rendering_jobs,
+                "total_videos": total_videos,
+                "total_duration_sec": total_duration,
+                "total_size_mb": total_size_mb,
+                "total_uploads": total_uploads,
+                "db_size_kb": db_size_kb,
+                "journal_mode": "WAL"
+            }
