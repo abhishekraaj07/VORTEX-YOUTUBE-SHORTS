@@ -1,0 +1,53 @@
+---
+// Header.astro - Spatial Navigation Bar
+---
+<header class="px-8 py-4 flex items-center justify-between border-b border-white/10 liquid-glass sticky top-0 z-50">
+  <div class="flex items-center gap-4">
+    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-400 via-sky-500 to-indigo-600 flex items-center justify-center font-black text-2xl text-black shadow-lg shadow-cyan-500/40">
+      ⚡
+    </div>
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300 bg-clip-text text-transparent">
+          VORTEX STUDIO
+        </h1>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 uppercase tracking-widest mono">
+          ASTRO SPATIAL OS
+        </span>
+      </div>
+      <p class="text-xs text-slate-400 mono">Autonomous Shorts Generation • YouTube 2026 AI Policy Engine</p>
+    </div>
+  </div>
+
+  <!-- Navigation Spatial Pill Dock -->
+  <nav class="hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl liquid-glass-subtle border border-white/10">
+    <button onclick="switchView('studio')" id="tab-studio" class="liquid-pill active px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2">
+      <span>🎛️</span> Studio Core
+    </button>
+    <button onclick="switchView('pipeline')" id="tab-pipeline" class="liquid-pill px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300">
+      <span>⚡</span> Neural Pipeline
+    </button>
+    <button onclick="switchView('vault')" id="tab-vault" class="liquid-pill px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300">
+      <span>🎞️</span> Media Vault (<span id="vaultCount">1</span>)
+    </button>
+    <button onclick="switchView('publish')" id="tab-publish" class="liquid-pill px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300">
+      <span>🛡️</span> YouTube Compliance
+    </button>
+    <button onclick="switchView('system')" id="tab-system" class="liquid-pill px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-slate-300">
+      <span>⚙️</span> Spatial Matrix
+    </button>
+  </nav>
+
+  <!-- Live Connectivity & Audio Toggle -->
+  <div class="flex items-center gap-3">
+    <button onclick="toggleAudio()" id="audioToggleBtn" title="Toggle Spatial Audio" class="p-2.5 rounded-xl liquid-pill text-xs flex items-center gap-1 text-slate-300">
+      <span id="audioIcon">🔊</span>
+    </button>
+
+    <div id="backendStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl liquid-glass-subtle text-xs mono">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-emerald-400 font-bold" id="backendStatusText">CONNECTED</span>
+      <span class="text-slate-500 text-[10px]" id="backendLatency">12ms</span>
+    </div>
+  </div>
+</header>

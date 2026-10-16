@@ -27,3 +27,8 @@ output/*
 !.dev.vars.example
 .env*
 !.env.example
+
+# Astro & Node
+astro-studio/node_modules/
+astro-studio/.astro/
+

@@ -252,6 +252,20 @@ class StudioHandler(BaseHTTPRequestHandler):
             return
 
         else:
+            # Check if file exists in WEB_DIR (e.g. /_astro/index.xyz.css)
+            relative_path = path.lstrip("/")
+            web_file_path = os.path.normpath(os.path.join(WEB_DIR, relative_path))
+            if web_file_path.startswith(WEB_DIR) and os.path.exists(web_file_path) and os.path.isfile(web_file_path):
+                mime_type, _ = mimetypes.guess_type(web_file_path)
+                self.send_response(200)
+                self.send_header("Content-Type", mime_type or "application/octet-stream")
+                self.send_header("Content-Length", str(os.path.getsize(web_file_path)))
+                self.end_headers()
+                if not head_only:
+                    with open(web_file_path, "rb") as f:
+                        self.wfile.write(f.read())
+                return
+
             self.send_response(404)
             self.end_headers()
 

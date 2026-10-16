@@ -1,0 +1,161 @@
+---
+// StudioCore.astro - Topic selector, Script inspector, Voice studio & Render trigger
+---
+<div class="lg:col-span-7 flex flex-col gap-6">
+
+  <!-- Section 1: Viral Topic Selector -->
+  <div class="liquid-glass p-6 rounded-3xl spatial-card">
+    <div class="specular-sheen"></div>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-bold text-white flex items-center gap-2">
+        <span class="text-cyan-400 mono">01</span> Select High-Retention Video Concept
+      </h2>
+      <span class="text-[10px] text-cyan-300 mono bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+        80%+ Retention Calibrated
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="topicCardsContainer">
+      
+      <!-- Topic 1 -->
+      <label class="cursor-pointer border-2 border-cyan-400/80 bg-cyan-950/20 p-4 rounded-2xl flex flex-col justify-between transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+        <input type="radio" name="topic" value="y2k38_bug" checked class="hidden" onchange="onTopicChange('y2k38_bug')">
+        <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50"></div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-400 mono">Tech Mystery</span>
+          <h3 class="font-bold text-sm text-slate-100 mt-1">Year 2038 Bug</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-snug">The 32-bit signed integer timestamp overflow that threatens global infrastructure.</p>
+        </div>
+        <div class="mt-4 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] mono">
+          <span class="text-cyan-400 font-semibold">Hook Score: 96%</span>
+          <span class="text-slate-500">72s Short</span>
+        </div>
+      </label>
+
+      <!-- Topic 2 -->
+      <label class="cursor-pointer border border-white/10 bg-slate-900/40 p-4 rounded-2xl flex flex-col justify-between transition-all hover:border-cyan-400/50 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+        <input type="radio" name="topic" value="undersea_cables" class="hidden" onchange="onTopicChange('undersea_cables')">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-sky-400 mono">Infrastructure</span>
+          <h3 class="font-bold text-sm text-slate-100 mt-1">Undersea Cables</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-snug">Why 99% of global internet data travels under the ocean, not through satellites.</p>
+        </div>
+        <div class="mt-4 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] mono">
+          <span class="text-sky-400 font-semibold">Hook Score: 92%</span>
+          <span class="text-slate-500">65s Short</span>
+        </div>
+      </label>
+
+      <!-- Topic 3 -->
+      <label class="cursor-pointer border border-white/10 bg-slate-900/40 p-4 rounded-2xl flex flex-col justify-between transition-all hover:border-cyan-400/50 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+        <input type="radio" name="topic" value="stuxnet_virus" class="hidden" onchange="onTopicChange('stuxnet_virus')">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400 mono">Cyber Warfare</span>
+          <h3 class="font-bold text-sm text-slate-100 mt-1">Stuxnet Missile</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-snug">The world's first digital weapon designed to destroy physical air-gapped centrifuges.</p>
+        </div>
+        <div class="mt-4 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] mono">
+          <span class="text-purple-400 font-semibold">Hook Score: 94%</span>
+          <span class="text-slate-500">68s Short</span>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- Section 2: Interactive Script & Retention Inspector -->
+  <div class="liquid-glass p-6 rounded-3xl spatial-card">
+    <div class="specular-sheen"></div>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base font-bold text-white flex items-center gap-2">
+        <span class="text-cyan-400 mono">02</span> Retention Script Architecture
+      </h2>
+      <button onclick="toggleScriptEditor()" class="text-xs mono text-cyan-400 hover:text-cyan-300 underline">
+        Inspect Script Segments
+      </button>
+    </div>
+
+    <!-- Hook breakdown badge -->
+    <div class="p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/20 mb-3 flex items-start gap-3">
+      <span class="text-cyan-400 font-bold text-sm mono">0-3s</span>
+      <div class="flex-1">
+        <div class="text-[10px] text-cyan-300 font-bold uppercase mono">High-Curiosity Opening Hook</div>
+        <p id="scriptHookText" class="text-xs text-slate-200 mt-0.5 font-medium">
+          "Duniya bhar ke banks aur servers 19 January 2038 ko achanak crash ho sakte hain!"
+        </p>
+      </div>
+    </div>
+
+    <!-- Collapsible Story Chunks -->
+    <div id="scriptChunksContainer" class="space-y-2 text-xs">
+      <div class="p-3 rounded-2xl bg-slate-900/60 border border-white/5 text-slate-300 flex items-start gap-2">
+        <span class="text-slate-500 mono">#1</span>
+        <span>Aur iski wajah koi nuclear war ya solar flare nahi, balki code ki sirf ek chhoti si limit hai.</span>
+      </div>
+      <div class="p-3 rounded-2xl bg-slate-900/60 border border-white/5 text-slate-300 flex items-start gap-2">
+        <span class="text-slate-500 mono">#2</span>
+        <span>Aaj bhi duniya ke 80% critical servers 32-bit signed integer par time count karte hain...</span>
+      </div>
+    </div>
+
+    <!-- Loop Closure -->
+    <div class="mt-3 p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/20 flex items-center justify-between text-xs">
+      <span class="text-indigo-300 font-bold mono">Loop Closure Hook:</span>
+      <span id="scriptLoopText" class="text-slate-300 italic">"Aur yahi wajah hai ki..."</span>
+    </div>
+  </div>
+
+  <!-- Section 3: Neural Voice Studio -->
+  <div class="liquid-glass p-6 rounded-3xl spatial-card">
+    <div class="specular-sheen"></div>
+    <h2 class="text-base font-bold text-white flex items-center gap-2 mb-4">
+      <span class="text-cyan-400 mono">03</span> Microsoft Neural Voice Synthesizer
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-2">Narrator Profile</label>
+        <select id="voiceSelect" onchange="playHapticSound('click')" class="w-full bg-slate-900/90 border border-white/10 rounded-2xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+          <option value="hi_male">Hindi: Madhur Neural (Deep Documentary)</option>
+          <option value="hi_female">Hindi: Swara Neural (Clear & Explanatory)</option>
+          <option value="en_male">English: Prabhat Neural (Tech Narrator)</option>
+          <option value="en_us_male">US English: Christopher Neural (Storyteller)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-2">Audio Pacing & Retention Cadence</label>
+        <div class="flex items-center justify-between bg-slate-900/90 border border-white/10 rounded-2xl px-4 py-2.5">
+          <span class="text-cyan-400 font-bold mono text-sm">+6% Rate</span>
+          <span class="text-[11px] text-slate-400">Algorithmic fast-flow</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Render Action & Live Status -->
+  <div class="space-y-4">
+    <button id="generateBtn" onclick="triggerRender()" class="w-full py-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-extrabold text-base tracking-wide shadow-2xl shadow-cyan-500/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 relative overflow-hidden group">
+      <span class="text-xl">🚀</span>
+      <span class="tracking-wider uppercase font-black">Generate 1080x1920 Viral Short</span>
+      <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+    </button>
+
+    <!-- Live Progress HUD -->
+    <div id="jobProgressContainer" class="hidden liquid-glass p-5 rounded-2xl border border-cyan-500/30">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+          <span id="jobStageText" class="text-xs font-bold text-cyan-300 mono">Initializing pipeline...</span>
+        </div>
+        <span id="jobPercentText" class="text-xs font-bold text-cyan-400 mono">0%</span>
+      </div>
+      <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/10">
+        <div id="jobProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300 w-0"></div>
+      </div>
+      <div class="flex items-center justify-between mt-3 text-[10px] text-slate-400 mono">
+        <span id="jobIdDisplay">JOB: ---</span>
+        <span id="jobElapsedDisplay">0.0s Elapsed</span>
+      </div>
+    </div>
+  </div>
+
+</div>

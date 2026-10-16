@@ -1,0 +1,79 @@
+---
+// SystemMatrix.astro - System telemetry, SQLite WAL state, backend ping
+---
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  
+  <!-- Backend & Network -->
+  <div class="liquid-glass p-8 rounded-3xl">
+    <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+      <span>🌐</span> Backend Endpoint Configuration
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">API Base URL</label>
+        <div class="flex gap-2">
+          <input type="text" id="customApiBase" placeholder="http://localhost:8080" class="flex-1 bg-slate-900 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-slate-200 mono focus:outline-none focus:border-cyan-400">
+          <button onclick="saveApiBase()" class="liquid-pill px-4 py-2.5 rounded-2xl text-xs font-semibold text-cyan-300">
+            Save & Ping
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1.5">For Cloudflare / GitHub Pages preview, point to your local machine via ngrok/localtunnel or keep localhost for local rendering.</p>
+      </div>
+
+      <!-- Database Telemetry -->
+      <div class="pt-4 border-t border-white/10 space-y-2 text-xs">
+        <h3 class="font-bold text-slate-300 mb-2">SQLite Database State</h3>
+        <div class="flex justify-between text-slate-400">
+          <span>Engine:</span>
+          <span class="text-cyan-400 mono font-semibold">SQLite 3 (WAL Mode)</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Database File:</span>
+          <span class="text-slate-300 mono">vortex.db</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Total Jobs Handled:</span>
+          <span class="text-slate-200 mono font-bold" id="sysTotalJobs">--</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Total Videos Cataloged:</span>
+          <span class="text-slate-200 mono font-bold" id="sysTotalVideos">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio & Environment Preferences -->
+  <div class="liquid-glass p-8 rounded-3xl">
+    <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+      <span>🎚️</span> Spatial Environment Preferences
+    </h2>
+    <div class="space-y-5">
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Web Audio Synthesizer Haptics</label>
+        <div class="flex items-center justify-between p-3 rounded-2xl liquid-glass-subtle">
+          <span class="text-xs text-slate-200">Synthesized Glass Pings</span>
+          <button onclick="toggleAudio()" class="liquid-pill px-3 py-1 rounded-xl text-xs font-bold text-cyan-300" id="soundPrefBtn">
+            Active
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs text-slate-400 mb-2">Liquid Canvas Particle Density</label>
+        <input type="range" min="10" max="60" value="30" id="particleSlider" oninput="updateParticles(this.value)" class="w-full accent-cyan-400">
+        <div class="flex justify-between text-[10px] text-slate-500 mono mt-1">
+          <span>Power Saver</span>
+          <span>Hyper Dynamic</span>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-white/10">
+        <button onclick="playHapticSound('complete')" class="w-full py-3 rounded-2xl liquid-pill text-xs font-semibold text-cyan-300 flex items-center justify-center gap-2">
+          <span>🔔</span> Test Spatial Sound Frequency
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import StudioCore from '../components/StudioCore.astro';
+import PhoneStage from '../components/PhoneStage.astro';
+import PipelineGraph from '../components/PipelineGraph.astro';
+import MediaVault from '../components/MediaVault.astro';
+import YouTubeCompliance from '../components/YouTubeCompliance.astro';
+import SystemMatrix from '../components/SystemMatrix.astro';
+import TheaterModal from '../components/TheaterModal.astro';
+---
+
+<Layout title="VORTEX SHORTS — Astro Liquid Glass Spatial OS">
+  <!-- Top Spatial Bar -->
+  <Header />
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
+
+    <!-- VIEW 1: STUDIO CORE -->
+    <div id="view-studio" class="view-pane active-pane">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <StudioCore />
+        <PhoneStage />
+      </div>
+    </div>
+
+    <!-- VIEW 2: NEURAL PIPELINE TELEMETRY -->
+    <div id="view-pipeline" class="view-pane">
+      <PipelineGraph />
+    </div>
+
+    <!-- VIEW 3: MEDIA VAULT -->
+    <div id="view-vault" class="view-pane">
+      <MediaVault />
+    </div>
+
+    <!-- VIEW 4: YOUTUBE COMPLIANCE & PUBLISH -->
+    <div id="view-publish" class="view-pane">
+      <YouTubeCompliance />
+    </div>
+
+    <!-- VIEW 5: SPATIAL MATRIX & PREFERENCES -->
+    <div id="view-system" class="view-pane">
+      <SystemMatrix />
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="px-8 py-4 border-t border-white/10 text-center text-xs text-slate-500 mono liquid-glass-subtle">
+    VORTEX-YOUTUBE-SHORTS • Astro.js Edition • Built by <a href="https://github.com/abhishekraaj07" target="_blank" class="text-cyan-400 hover:underline">@abhishekraaj07</a>
+  </footer>
+
+  <!-- Theater Modal -->
+  <TheaterModal />
+</Layout>

@@ -1,0 +1,83 @@
+---
+// PipelineGraph.astro - Real-time node flowchart and terminal log
+---
+<div class="liquid-glass p-8 rounded-3xl mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-xl font-black text-white flex items-center gap-2">
+        <span class="text-cyan-400">⚡</span> Real-Time Production Node Graph
+      </h2>
+      <p class="text-xs text-slate-400 mono mt-1">Multi-stage pipeline execution & latency inspection</p>
+    </div>
+    <div class="flex items-center gap-2 mono text-xs">
+      <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+        Engine: FFmpeg 9.0.2 + Edge-TTS
+      </span>
+    </div>
+  </div>
+
+  <!-- Node Flow Graph -->
+  <div class="grid grid-cols-1 md:grid-cols-6 gap-4 py-4">
+    
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-cyan-500/30 text-center relative">
+      <div class="text-2xl mb-1">📝</div>
+      <div class="text-xs font-bold text-slate-200">1. Script</div>
+      <div class="text-[10px] text-cyan-400 mono mt-1">0-3s Hook Gen</div>
+      <div class="text-[9px] text-slate-500 mt-2">Latency: ~40ms</div>
+    </div>
+
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-sky-500/30 text-center relative">
+      <div class="text-2xl mb-1">🎙️</div>
+      <div class="text-xs font-bold text-slate-200">2. Neural Voice</div>
+      <div class="text-[10px] text-sky-400 mono mt-1">Madhur / Prabhat</div>
+      <div class="text-[9px] text-slate-500 mt-2">Latency: ~1.8s</div>
+    </div>
+
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-indigo-500/30 text-center relative">
+      <div class="text-2xl mb-1">💬</div>
+      <div class="text-xs font-bold text-slate-200">3. Kinetic ASS</div>
+      <div class="text-[10px] text-indigo-400 mono mt-1">Word Highlights</div>
+      <div class="text-[9px] text-slate-500 mt-2">Latency: ~15ms</div>
+    </div>
+
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-purple-500/30 text-center relative">
+      <div class="text-2xl mb-1">🎨</div>
+      <div class="text-xs font-bold text-slate-200">4. Visuals</div>
+      <div class="text-[10px] text-purple-400 mono mt-1">Ken Burns Motion</div>
+      <div class="text-[9px] text-slate-500 mt-2">Latency: ~2.4s</div>
+    </div>
+
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-pink-500/30 text-center relative">
+      <div class="text-2xl mb-1">🎞️</div>
+      <div class="text-xs font-bold text-slate-200">5. Composer</div>
+      <div class="text-[10px] text-pink-400 mono mt-1">1080x1920 MP4</div>
+      <div class="text-[9px] text-slate-500 mt-2">Latency: ~6.2s</div>
+    </div>
+
+    <div class="liquid-glass-subtle p-4 rounded-2xl border border-emerald-500/30 text-center relative">
+      <div class="text-2xl mb-1">🛡️</div>
+      <div class="text-xs font-bold text-slate-200">6. Gateway</div>
+      <div class="text-[10px] text-emerald-400 mono mt-1">SQLite & YT API</div>
+      <div class="text-[9px] text-slate-500 mt-2">Safety: Private</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Terminal Log Console -->
+<div class="liquid-glass p-6 rounded-3xl">
+  <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+      <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+      <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+      <span class="text-xs mono text-slate-300 ml-2">vortex_orchestrator.log</span>
+    </div>
+    <button onclick="clearLogs()" class="text-[11px] mono text-slate-400 hover:text-white">Clear Log</button>
+  </div>
+  <div id="pipelineTerminal" class="h-80 overflow-y-auto bg-black/80 rounded-2xl p-4 mono text-xs text-slate-300 space-y-1.5 select-text border border-white/5">
+    <div class="text-slate-500">[SYSTEM] Pipeline initialized. Astro.js Studio mounted.</div>
+    <div class="text-emerald-400">[INFO] Ready for asynchronous rendering. Worker thread pool idle.</div>
+    <div class="text-cyan-400">[READY] Waiting for user job submission...</div>
+  </div>
+</div>

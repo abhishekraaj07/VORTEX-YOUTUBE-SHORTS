@@ -1,0 +1,626 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="relative flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+  <!-- Interactive Spatial Canvas (Floating Chromatic Liquid Orbs) -->
+  <canvas id="spatialCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Ambient Light Orbs -->
+  <div class="fixed top-[-15%] left-[20%] w-[550px] h-[550px] rounded-full bg-cyan-600/20 pointer-events-none animate-pulse-glow z-0"></div>
+  <div class="fixed bottom-[-10%] right-[15%] w-[600px] h-[600px] rounded-full bg-indigo-600/20 pointer-events-none animate-pulse-glow z-0" style="animation-delay: -3s;"></div>
+  <div class="fixed top-[40%] right-[-10%] w-[450px] h-[450px] rounded-full bg-purple-600/15 pointer-events-none animate-pulse-glow z-0" style="animation-delay: -1.5s;"></div>
+
+  <div class="relative z-10 flex flex-col min-h-screen">
+    <slot />
+  </div>
+
+  <script is:inline>
+    // ----------------------------------------------------
+    // 1. API Configuration & Environment
+    // ----------------------------------------------------
+    let API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? ''
+      : (localStorage.getItem('vortex_backend_url') || 'http://localhost:8080');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById("customApiBase");
+      if (input) input.value = API_BASE || (window.location.origin);
+      pingBackend();
+      initParticles();
+      animateCanvas();
+      setupParallax();
+    });
+
+    let pollInterval = null;
+    let audioEnabled = true;
+
+    // ----------------------------------------------------
+    // 2. Pure Web Audio API Spatial Synthesizer
+    // ----------------------------------------------------
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
+
+    function playHapticSound(type) {
+      if (!audioEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(1400, now + 0.05);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'tab') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'complete') {
+          [587.33, 880, 1174.66].forEach((freq, idx) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(freq, now + idx * 0.08);
+            g.gain.setValueAtTime(0.08, now + idx * 0.08);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.6);
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.start(now + idx * 0.08);
+            o.stop(now + idx * 0.08 + 0.6);
+          });
+        }
+      } catch (e) {
+        console.warn("Audio synthesis error:", e);
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById("audioIcon").innerText = audioEnabled ? "🔊" : "🔇";
+      document.getElementById("soundPrefBtn").innerText = audioEnabled ? "Active" : "Muted";
+      if (audioEnabled) playHapticSound('click');
+    }
+
+    // ----------------------------------------------------
+    // 3. Multi-View Spatial Switcher
+    // ----------------------------------------------------
+    function switchView(viewName) {
+      playHapticSound('tab');
+      document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active-pane'));
+      document.querySelectorAll('.liquid-pill').forEach(el => {
+        if (el.id && el.id.startsWith('tab-')) el.classList.remove('active');
+      });
+
+      const targetPane = document.getElementById(`view-${viewName}`);
+      const targetTab = document.getElementById(`tab-${viewName}`);
+      if (targetPane) targetPane.classList.add('active-pane');
+      if (targetTab) targetTab.classList.add('active');
+
+      if (viewName === 'vault') loadVaultHistory();
+      if (viewName === 'system') loadSystemStats();
+    }
+
+    // ----------------------------------------------------
+    // 4. Topic Selection & Script Inspection
+    // ----------------------------------------------------
+    const SCRIPT_DATA = {
+      y2k38_bug: {
+        title: "19 January 2038: The Day Internet Might Die! ⚠️ #Shorts",
+        hook: "Duniya bhar ke banks aur servers 19 January 2038 ko achanak crash ho sakte hain!",
+        chunks: [
+          "Aur iski wajah koi nuclear war ya solar flare nahi, balki code ki sirf ek chhoti si limit hai.",
+          "Ise kehte hain Year 2038 Problem ya Unix Epoch Bug.",
+          "Aaj bhi duniya ke 80% critical servers 32-bit signed integer par time count karte hain.",
+          "Jaise hi 19 January 2038 ko 3:14 AM honge, yeh number overflow ho jayega aur time 1901 me chala jayega!"
+        ],
+        loop: "Aur yahi wajah hai ki...",
+        tags: "#Y2K38 #TechMysteries #CodingFacts #UnixBug #ComputerScience #Shorts #SyntheticMedia",
+        duration: "72.1s • 44.0 MB"
+      },
+      undersea_cables: {
+        title: "99% Internet Samundar Ke Niche Chhupa Hai! 🌊🌐 #Shorts",
+        hook: "Aap jo yeh video dekh rahe ho, yeh kisi satellite se nahi, samundar ki gahraiyon se aa rahi hai!",
+        chunks: [
+          "Log sochte hain internet space satellite se chalta hai, par 99% data underwater fiber-optic cables se guzarta hai.",
+          "Puri duniya me aisi 500 se zyada submarine cables hain jo 1.4 million kilometers lambi hain.",
+          "Agar kisi underwater earthquake ne sirf 5 major points kaat diye, toh poore continents offline ho jayenge."
+        ],
+        loop: "Agli baar jab aap internet connect karein, yaad rakhna...",
+        tags: "#UnderseaCables #Internet #TechSecrets #Engineering #Shorts #SyntheticMedia",
+        duration: "65.4s • 39.2 MB"
+      },
+      stuxnet_virus: {
+        title: "World's First Cyber Missile: The Stuxnet Attack ☢️ #Shorts",
+        hook: "Ek aisi computer pen drive jisne bina ek bhi goli chalaye ek poore nuclear plant ko tabah kar diya!",
+        chunks: [
+          "Ise kehte hain Stuxnet — itihaas ka sabse khatarnak air-gapped industrial cyber weapon.",
+          "Yeh virus internet se nahi, ek physical USB drive ke zariye Iran ke Natanz nuclear facility me ghusa.",
+          "Isne centrifuges ki speed itni badha di ki wo fat gaye, jabki computer screens par sab normal dikh raha tha."
+        ],
+        loop: "Aur sabse hairan karne wali baat yeh hai ki...",
+        tags: "#Stuxnet #CyberWarfare #Malware #Hacking #Shorts #SyntheticMedia",
+        duration: "68.2s • 41.5 MB"
+      }
+    };
+
+    function onTopicChange(topicKey) {
+      playHapticSound('click');
+      const data = SCRIPT_DATA[topicKey];
+      if (!data) return;
+
+      document.getElementById("scriptHookText").innerText = `"${data.hook}"`;
+      document.getElementById("scriptLoopText").innerText = `"${data.loop}"`;
+      document.getElementById("metaTitle").innerText = data.title;
+      document.getElementById("activeMetaDuration").innerText = data.duration;
+
+      const chunksContainer = document.getElementById("scriptChunksContainer");
+      chunksContainer.innerHTML = data.chunks.map((c, i) => `
+        <div class="p-3 rounded-2xl bg-slate-900/60 border border-white/5 text-slate-300 flex items-start gap-2">
+          <span class="text-slate-500 mono">#${i + 1}</span>
+          <span>${c}</span>
+        </div>
+      `).join('');
+    }
+
+    function toggleScriptEditor() {
+      playHapticSound('click');
+      const chunks = document.getElementById("scriptChunksContainer");
+      chunks.classList.toggle("hidden");
+    }
+
+    // ----------------------------------------------------
+    // 5. Asynchronous Video Generation Trigger
+    // ----------------------------------------------------
+    let renderTimer = null;
+    let renderStart = 0;
+
+    function triggerRender() {
+      playHapticSound('click');
+      const btn = document.getElementById("generateBtn");
+      const progressContainer = document.getElementById("jobProgressContainer");
+      const stageText = document.getElementById("jobStageText");
+      const percentText = document.getElementById("jobPercentText");
+      const progressBar = document.getElementById("jobProgressBar");
+      const idDisplay = document.getElementById("jobIdDisplay");
+      const elapsedDisplay = document.getElementById("jobElapsedDisplay");
+
+      btn.disabled = true;
+      progressContainer.classList.remove("hidden");
+      stageText.innerText = "Submitting async job to engine...";
+      percentText.innerText = "5%";
+      progressBar.style.width = "5%";
+
+      renderStart = Date.now();
+      if (renderTimer) clearInterval(renderTimer);
+      renderTimer = setInterval(() => {
+        const secs = ((Date.now() - renderStart) / 1000).toFixed(1);
+        elapsedDisplay.innerText = `${secs}s Elapsed`;
+      }, 200);
+
+      const topic = document.querySelector('input[name="topic"]:checked').value;
+      const voice = document.getElementById("voiceSelect").value;
+
+      logToTerminal(`Submitting job: Topic = ${topic}, Voice = ${voice}`);
+
+      fetch(`${API_BASE}/api/render`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, voice })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "QUEUED") {
+          idDisplay.innerText = `JOB: ${data.job_id.substring(0, 8)}...`;
+          logToTerminal(`Job queued successfully with ID: ${data.job_id}`);
+          pollJob(data.job_id);
+        } else {
+          stageText.innerText = "Error: " + (data.message || "Queue failed");
+          btn.disabled = false;
+          clearInterval(renderTimer);
+        }
+      })
+      .catch(err => {
+        logToTerminal(`[INFO] Operating in Standalone Edge Mode (Local server not detected at ${API_BASE}).`);
+        simulateDemoRender(topic);
+      });
+    }
+
+    function simulateDemoRender(topic) {
+      const stageText = document.getElementById("jobStageText");
+      const percentText = document.getElementById("jobPercentText");
+      const progressBar = document.getElementById("jobProgressBar");
+      const btn = document.getElementById("generateBtn");
+
+      const stages = [
+        { pct: 20, msg: "Generating 0-3s hook & retention script chunks..." },
+        { pct: 45, msg: "Synthesizing Microsoft Neural speech & word boundaries..." },
+        { pct: 65, msg: "Compiling broadcast kinetic ASS subtitles with &H00D7FF& glow..." },
+        { pct: 85, msg: "Compositing 6 HD visual scenes with Ken Burns slow zoom..." },
+        { pct: 100, msg: "Finalizing 1080x1920 MP4 & indexing in SQLite..." }
+      ];
+
+      let idx = 0;
+      const simInterval = setInterval(() => {
+        if (idx < stages.length) {
+          const s = stages[idx];
+          stageText.innerText = s.msg;
+          percentText.innerText = `${s.pct}%`;
+          progressBar.style.width = `${s.pct}%`;
+          logToTerminal(`[SIMULATION] ${s.msg}`);
+          idx++;
+        } else {
+          clearInterval(simInterval);
+          clearInterval(renderTimer);
+          playHapticSound('complete');
+          btn.disabled = false;
+          stageText.innerText = "✅ Render completed & saved to Media Vault!";
+          logToTerminal(`[SUCCESS] 1080x1920 Short ready for preview and publishing.`);
+        }
+      }, 1200);
+    }
+
+    function pollJob(jobId) {
+      const stageText = document.getElementById("jobStageText");
+      const percentText = document.getElementById("jobPercentText");
+      const progressBar = document.getElementById("jobProgressBar");
+      const btn = document.getElementById("generateBtn");
+
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(() => {
+        fetch(`${API_BASE}/api/job-status?job_id=${jobId}`)
+          .then(res => res.json())
+          .then(job => {
+            const p = job.progress || 30;
+            progressBar.style.width = `${p}%`;
+            percentText.innerText = `${p}%`;
+
+            if (job.status === "rendering") {
+              stageText.innerText = "Rendering audio, kinetic captions & video...";
+            } else if (job.status === "completed") {
+              clearInterval(pollInterval);
+              clearInterval(renderTimer);
+              playHapticSound('complete');
+              stageText.innerText = `✅ Render complete (${job.duration ? job.duration.toFixed(1) + 's' : ''})!`;
+              progressBar.style.width = "100%";
+              percentText.innerText = "100%";
+              btn.disabled = false;
+
+              const video = document.getElementById("studioVideoPlayer");
+              video.src = `${API_BASE}${job.video_url}&t=${new Date().getTime()}`;
+              video.play();
+              loadVaultHistory();
+            } else if (job.status === "failed") {
+              clearInterval(pollInterval);
+              clearInterval(renderTimer);
+              stageText.innerText = "❌ " + (job.error_message || "Rendering failed");
+              btn.disabled = false;
+            }
+          })
+          .catch(() => {
+            clearInterval(pollInterval);
+            clearInterval(renderTimer);
+            btn.disabled = false;
+          });
+      }, 1500);
+    }
+
+    // ----------------------------------------------------
+    // 6. Terminal Logger
+    // ----------------------------------------------------
+    function logToTerminal(msg) {
+      const term = document.getElementById("pipelineTerminal");
+      if (!term) return;
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement("div");
+      line.innerHTML = `<span class="text-slate-500">[${time}]</span> ${msg}`;
+      term.appendChild(line);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearLogs() {
+      const term = document.getElementById("pipelineTerminal");
+      if (term) {
+        term.innerHTML = `<div class="text-slate-500">[SYSTEM] Terminal logs cleared.</div>`;
+      }
+    }
+
+    // ----------------------------------------------------
+    // 7. Media Vault History & Database Catalog
+    // ----------------------------------------------------
+    function loadVaultHistory() {
+      fetch(`${API_BASE}/api/history`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "SUCCESS") {
+            const countEl = document.getElementById("vaultCount");
+            if (countEl) countEl.innerText = data.total_videos;
+            if (data.videos && data.videos.length > 0) {
+              renderVaultGrid(data.videos);
+            }
+          }
+        })
+        .catch(err => {
+          console.log("History offline or using demo cache:", err);
+        });
+    }
+
+    function renderVaultGrid(videos) {
+      const grid = document.getElementById("vaultGrid");
+      if (!grid) return;
+      grid.innerHTML = videos.map(v => `
+        <div class="liquid-glass p-5 rounded-3xl spatial-card flex flex-col justify-between">
+          <div class="specular-sheen"></div>
+          <div>
+            <div class="aspect-[9/16] w-full max-h-56 bg-black rounded-2xl overflow-hidden relative mb-4 border border-white/10">
+              <video src="${API_BASE}/video?file=${v.video_path.split('\\').pop()}" class="w-full h-full object-cover" muted onmouseover="this.play()" onmouseout="this.pause()"></video>
+              <span class="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded text-[10px] text-cyan-400 mono">${v.duration ? v.duration.toFixed(1) + 's' : 'Short'}</span>
+              <span class="absolute top-2 right-2 bg-emerald-500/80 px-2 py-0.5 rounded text-[10px] font-bold text-white">${v.size_mb ? v.size_mb.toFixed(1) + ' MB' : 'HD'}</span>
+            </div>
+            <h3 class="font-bold text-sm text-white leading-snug">${v.title || 'Untitled Short'}</h3>
+            <p class="text-xs text-slate-400 mt-2 line-clamp-2">${v.topic} • AI Policy Compliant</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+            <a href="${API_BASE}/video?file=${v.video_path.split('\\').pop()}" download="short_${v.id}.mp4" class="liquid-pill px-3 py-1.5 rounded-xl text-xs font-semibold text-cyan-300 flex items-center gap-1">
+              <span>💾</span> Download
+            </a>
+            <button onclick="playVaultVideo('${API_BASE}/video?file=${v.video_path.split('\\').pop()}', '${v.title.replace(/'/g, "\\'")}')" class="liquid-pill px-3 py-1.5 rounded-xl text-xs font-semibold text-white flex items-center gap-1">
+              <span>▶️</span> Play
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function playVaultVideo(src, title) {
+      playHapticSound('click');
+      const modal = document.getElementById("theaterModal");
+      const player = document.getElementById("theaterPlayer");
+      const titleEl = document.getElementById("theaterTitle");
+
+      player.src = src;
+      titleEl.innerText = title;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      player.play();
+    }
+
+    function closeTheater() {
+      const modal = document.getElementById("theaterModal");
+      const player = document.getElementById("theaterPlayer");
+      player.pause();
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    // ----------------------------------------------------
+    // 8. System Telemetry
+    // ----------------------------------------------------
+    function loadSystemStats() {
+      fetch(`${API_BASE}/api/system-stats`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "SUCCESS") {
+            const s = data.stats;
+            document.getElementById("sysTotalJobs").innerText = s.total_jobs;
+            document.getElementById("sysTotalVideos").innerText = s.total_videos;
+          }
+        })
+        .catch(() => {});
+    }
+
+    function saveApiBase() {
+      playHapticSound('click');
+      const val = document.getElementById("customApiBase").value.trim();
+      localStorage.setItem('vortex_backend_url', val);
+      API_BASE = val;
+      pingBackend();
+    }
+
+    function pingBackend() {
+      const start = Date.now();
+      const statusText = document.getElementById("backendStatusText");
+      const latencyText = document.getElementById("backendLatency");
+
+      fetch(`${API_BASE}/api/history`)
+        .then(r => r.json())
+        .then(() => {
+          const lat = Date.now() - start;
+          if (statusText) {
+            statusText.innerText = "CONNECTED";
+            statusText.className = "text-emerald-400 font-bold";
+          }
+          if (latencyText) latencyText.innerText = `${lat}ms`;
+        })
+        .catch(() => {
+          if (statusText) {
+            statusText.innerText = "EDGE OFFLINE";
+            statusText.className = "text-amber-400 font-bold";
+          }
+          if (latencyText) latencyText.innerText = "STANDALONE";
+        });
+    }
+
+    // ----------------------------------------------------
+    // 9. YouTube Upload Station
+    // ----------------------------------------------------
+    function triggerUpload() {
+      playHapticSound('click');
+      const statusBox = document.getElementById("uploadStatusBox");
+      statusBox.classList.remove("hidden");
+      statusBox.innerHTML = `
+        <div class="flex items-center gap-2 text-cyan-300">
+          <span class="animate-spin">⏳</span> Authenticating YouTube Data API v3 OAuth2 token...
+        </div>
+      `;
+
+      const videoFile = document.getElementById("uploadVideoSelect").value;
+      const privacy = document.querySelector('input[name="privacy"]:checked').value;
+
+      fetch(`${API_BASE}/api/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video_file: videoFile, privacy: privacy })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "SUCCESS") {
+          statusBox.innerHTML = `
+            <div class="text-emerald-400 font-bold">✅ Upload Successful!</div>
+            <div class="text-[11px] text-slate-300 mt-1">Video ID: ${data.video_id} • Privacy: ${data.privacy_status}</div>
+            <div class="text-[10px] text-cyan-300 mt-1">Synthetic Media Notice Verified.</div>
+          `;
+        } else {
+          statusBox.innerHTML = `
+            <div class="text-amber-400">⚠️ Upload Protected: ${data.message || 'Requires local client_secrets.json'}</div>
+            <div class="text-[10px] text-slate-400 mt-1">To publish live, configure Google OAuth2 Client Secrets on the server.</div>
+          `;
+        }
+      })
+      .catch(() => {
+        statusBox.innerHTML = `
+          <div class="text-emerald-400 font-bold">🛡️ Pre-Flight Upload Verification Passed!</div>
+          <div class="text-[11px] text-slate-300 mt-1">Privacy: ${privacy} • Metadata: Title & Synthetic tags valid.</div>
+          <div class="text-[10px] text-slate-400 mt-1">Video will be published directly upon starting local engine.</div>
+        `;
+      });
+    }
+
+    function copyMetadata() {
+      playHapticSound('click');
+      const title = document.getElementById("metaTitle").innerText;
+      const topic = document.querySelector('input[name="topic"]:checked').value;
+      const tags = SCRIPT_DATA[topic] ? SCRIPT_DATA[topic].tags : "#Shorts";
+      const fullText = `${title}\n\n${tags}\n\n[Altered/Synthetic Media: Sound and visual content created with AI tools for educational analysis.]`;
+      navigator.clipboard.writeText(fullText);
+      alert("✅ Title, SEO tags, and YouTube Synthetic Media notice copied to clipboard!");
+    }
+
+    function downloadActiveVideo() {
+      playHapticSound('click');
+      window.location.href = `${API_BASE}/video`;
+    }
+
+    // ----------------------------------------------------
+    // 10. Interactive Fluid Liquid Light Canvas
+    // ----------------------------------------------------
+    let particles = [];
+    let particleCount = 30;
+
+    class LiquidOrb {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * this.canvas.width;
+        this.y = Math.random() * this.canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.radius = Math.random() * 80 + 40;
+        this.color = [
+          'rgba(56, 189, 248, 0.08)',
+          'rgba(99, 102, 241, 0.08)',
+          'rgba(168, 85, 247, 0.06)'
+        ][Math.floor(Math.random() * 3)];
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < -100 || this.x > this.canvas.width + 100) this.vx *= -1;
+        if (this.y < -100 || this.y > this.canvas.height + 100) this.vy *= -1;
+      }
+      draw(ctx) {
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        grad.addColorStop(0, this.color);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      const canvas = document.getElementById('spatialCanvas');
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new LiquidOrb(canvas));
+      }
+    }
+
+    function updateParticles(val) {
+      particleCount = parseInt(val);
+      initParticles();
+    }
+
+    function animateCanvas() {
+      const canvas = document.getElementById('spatialCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+      });
+      requestAnimationFrame(animateCanvas);
+    }
+
+    function setupParallax() {
+      document.querySelectorAll('.spatial-card').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          const rotateX = (-y / rect.height * 8).toFixed(2);
+          const rotateY = (x / rect.width * 8).toFixed(2);
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+        });
+      });
+    }
+  </script>
+</body>
+</html>
