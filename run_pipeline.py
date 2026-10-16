@@ -27,7 +27,8 @@ def run_pipeline(
     topic_id: str = "y2k38_bug",
     voice_key: str = "hi_male",
     output_filename: str = "viral_short.mp4",
-    auto_upload: bool = False
+    auto_upload: bool = False,
+    privacy_status: str = "private"
 ):
     print("=" * 65)
     print("  🎬 AUTONOMOUS YOUTUBE SHORTS ENGINE — FULL PRODUCTION PIPELINE")
@@ -121,16 +122,28 @@ def run_pipeline(
     print(f"  • Size: {file_size_mb:.2f} MB")
     print(f"  • Duration: {duration:.1f}s")
     
-    # 6. Upload Assessment
-    publisher = YouTubePublisher()
-    upload_res = publisher.upload_video(
-        video_path=final_video_path,
-        title=script.title,
-        description=script.description,
-        tags=script.tags
-    )
-    print(f"\n📡 YouTube Publishing Status: {upload_res['status']}")
-    print(f"  • Details: {upload_res.get('message', 'Ready')}")
+    # 6. Upload Gating (Only runs if explicitly requested via auto_upload=True)
+    upload_res = None
+    if auto_upload:
+        print("\n[Step 6/6] 📡 Uploading Video to YouTube Channel...")
+        publisher = YouTubePublisher()
+        upload_res = publisher.upload_video(
+            video_path=final_video_path,
+            title=script.title,
+            description=script.description,
+            tags=script.tags,
+            privacy_status=privacy_status
+        )
+        print(f"  • Upload Result: {upload_res['status']}")
+        if "video_url" in upload_res:
+            print(f"  • Video URL: {upload_res['video_url']}")
+    else:
+        print("\n[Step 6/6] 💾 Local Mode: Upload skipped (Use --upload flag to trigger YouTube publishing).")
+        upload_res = {
+            "status": "LOCAL_ONLY",
+            "message": "Render completed locally. Run with --upload flag to publish to YouTube.",
+            "video_path": final_video_path
+        }
 
     return {
         "video_path": final_video_path,
@@ -145,12 +158,14 @@ if __name__ == "__main__":
     parser.add_argument("--topic", default="y2k38_bug", choices=["y2k38_bug", "undersea_cables", "stuxnet_virus"])
     parser.add_argument("--voice", default="hi_male", choices=["hi_male", "hi_female", "en_male", "en_female", "en_us_male"])
     parser.add_argument("--output", default="y2k38_viral_short.mp4")
-    parser.add_argument("--upload", action="store_true")
+    parser.add_argument("--upload", action="store_true", help="Explicitly enable YouTube publishing (default: False)")
+    parser.add_argument("--privacy", default="private", choices=["private", "unlisted", "public"], help="Privacy status for YouTube upload")
     
     args = parser.parse_args()
     run_pipeline(
         topic_id=args.topic,
         voice_key=args.voice,
         output_filename=args.output,
-        auto_upload=args.upload
+        auto_upload=args.upload,
+        privacy_status=args.privacy
     )

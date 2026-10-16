@@ -4,13 +4,22 @@ Supports Resumable Video Uploads, Automated Metadata, and 2026 Synthetic Media T
 """
 
 import os
-import json
-from typing import Optional, Dict, Any
+import re
+from typing import Optional, Dict, Any, List
 
 class YouTubePublisher:
-    """Manages YouTube Data API v3 authentication and video publishing."""
+    """Manages YouTube Data API v3 authentication and video publishing with strict compliance."""
 
     SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+    VALID_PRIVACY_STATUSES = {"private", "unlisted", "public"}
+    
+    # Official YouTube Synthetic Media Disclosure Statement
+    SYNTHETIC_DISCLOSURE_TEXT = (
+        "\n\n---\n"
+        "ℹ️ AI / Synthetic Content Disclosure:\n"
+        "Sound, narration, or visuals in this video were digitally generated or meaningfully altered using AI tools "
+        "in compliance with YouTube Community Guidelines & Generative AI Policy."
+    )
 
     def __init__(self, client_secrets_path: str = "client_secrets.json", token_path: str = "yt_token.json"):
         self.client_secrets_path = client_secrets_path
@@ -21,6 +30,39 @@ class YouTubePublisher:
         """Checks if client credentials or auth token exist."""
         return os.path.exists(self.token_path) or os.path.exists(self.client_secrets_path)
 
+    @classmethod
+    def validate_metadata(
+        cls,
+        title: str,
+        description: str,
+        tags: List[str],
+        privacy_status: str
+    ) -> Dict[str, Any]:
+        """Validates all metadata parameters prior to upload."""
+        if not title or len(title.strip()) == 0:
+            raise ValueError("Video title cannot be empty.")
+        if len(title) > 100:
+            raise ValueError(f"Video title exceeds 100 characters limit ({len(title)} chars).")
+
+        if privacy_status.lower() not in cls.VALID_PRIVACY_STATUSES:
+            raise ValueError(
+                f"Invalid privacy status '{privacy_status}'. Must be one of: {list(cls.VALID_PRIVACY_STATUSES)}"
+            )
+
+        sanitized_tags = [re.sub(r'[^a-zA-Z0-9_\- ]', '', str(t)).strip() for t in tags if str(t).strip()]
+        
+        # Ensure synthetic media disclosure is present in description
+        final_description = description
+        if "Synthetic Content Disclosure" not in final_description:
+            final_description = description.strip() + cls.SYNTHETIC_DISCLOSURE_TEXT
+
+        return {
+            "title": title.strip(),
+            "description": final_description,
+            "tags": sanitized_tags,
+            "privacy_status": privacy_status.lower()
+        }
+
     def upload_video(
         self,
         video_path: str,
@@ -28,29 +70,31 @@ class YouTubePublisher:
         description: str,
         tags: list,
         category_id: str = "28",
-        privacy_status: str = "private"
+        privacy_status: str = "private",
+        dry_run: bool = False
     ) -> Dict[str, Any]:
         """
-        Uploads a video to YouTube with full metadata.
-        If credentials are not yet configured, returns a mock simulation with detailed instructions.
+        Uploads a video to YouTube with validated metadata and synthetic media disclosures.
+        Defaults to 'private' for mandatory creator review.
         """
         if not os.path.exists(video_path):
             raise FileNotFoundError(f"Video file not found at: {video_path}")
 
-        if not self.is_configured():
+        validated = self.validate_metadata(title, description, tags, privacy_status)
+
+        if dry_run or not self.is_configured():
             return {
                 "status": "READY_FOR_UPLOAD",
                 "message": (
-                    "Video successfully rendered and verified locally! "
-                    "To enable direct 1-click cloud publishing, place your Google Cloud 'client_secrets.json' "
-                    "in the youtube_engine directory."
+                    "Video validated and ready for upload. "
+                    "To enable direct cloud publishing, provide Google Cloud 'client_secrets.json'."
                 ),
                 "video_path": video_path,
                 "metadata": {
-                    "title": title,
-                    "description": description,
-                    "tags": tags,
-                    "privacyStatus": privacy_status,
+                    "title": validated["title"],
+                    "description": validated["description"],
+                    "tags": validated["tags"],
+                    "privacyStatus": validated["privacy_status"],
                     "categoryId": category_id,
                     "selfDeclaredMadeForKids": False,
                     "containsSyntheticMedia": True
@@ -82,13 +126,13 @@ class YouTubePublisher:
 
         body = {
             "snippet": {
-                "title": title[:100],
-                "description": description,
-                "tags": tags,
+                "title": validated["title"],
+                "description": validated["description"],
+                "tags": validated["tags"],
                 "categoryId": category_id
             },
             "status": {
-                "privacyStatus": privacy_status,
+                "privacyStatus": validated["privacy_status"],
                 "selfDeclaredMadeForKids": False
             }
         }
@@ -105,5 +149,6 @@ class YouTubePublisher:
         return {
             "status": "SUCCESS",
             "video_id": response.get("id"),
-            "video_url": f"https://www.youtube.com/watch?v={response.get('id')}"
+            "video_url": f"https://www.youtube.com/watch?v={response.get('id')}",
+            "privacyStatus": validated["privacy_status"]
         }
