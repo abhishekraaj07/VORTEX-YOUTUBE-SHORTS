@@ -196,6 +196,10 @@
   </main>
 
   <script>
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? ''
+      : (localStorage.getItem('vortex_backend_url') || 'http://localhost:8080');
+
     let pollInterval = null;
 
     function triggerRender() {
@@ -211,7 +215,7 @@
       const topic = document.querySelector('input[name="topic"]:checked').value;
       const voice = document.getElementById("voiceSelect").value;
 
-      fetch("/api/render", {
+      fetch(`${API_BASE}/api/render`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic, voice })
@@ -227,7 +231,7 @@
         }
       })
       .catch(err => {
-        statusText.innerText = "❌ Network error communicating with server";
+        statusText.innerText = `❌ Cannot connect to backend (${API_BASE || 'localhost:8080'}). Make sure 'python server.py' is running.`;
         btn.disabled = false;
       });
     }
@@ -239,7 +243,7 @@
       if (pollInterval) clearInterval(pollInterval);
 
       pollInterval = setInterval(() => {
-        fetch(`/api/job-status?job_id=${jobId}`)
+        fetch(`${API_BASE}/api/job-status?job_id=${jobId}`)
           .then(res => res.json())
           .then(job => {
             if (job.status === "rendering") {
@@ -250,7 +254,7 @@
               btn.disabled = false;
 
               const video = document.getElementById("previewVideo");
-              video.src = `${job.video_url}&t=${new Date().getTime()}`;
+              video.src = `${API_BASE}${job.video_url}&t=${new Date().getTime()}`;
               video.play();
             } else if (job.status === "failed") {
               clearInterval(pollInterval);

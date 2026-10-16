@@ -4,6 +4,13 @@ A modular, production-engineered pipeline for generating high-engagement vertica
 
 ---
 
+## 🌐 Live Deployments
+
+* ⚡ **Cloudflare Production Studio:** [https://vortex-youtube-shorts.abhishekraaj07.workers.dev](https://vortex-youtube-shorts.abhishekraaj07.workers.dev)
+* 🐙 **GitHub Pages Studio:** [https://abhishekraaj07.github.io/VORTEX-YOUTUBE-SHORTS/](https://abhishekraaj07.github.io/VORTEX-YOUTUBE-SHORTS/)
+
+---
+
 ## 🎯 Architecture & YouTube 2026 Policy Compliance
 
 1. **Synthetic Content Disclosure:**
